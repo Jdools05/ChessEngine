@@ -17,7 +17,8 @@ vector<int> getQueenMoves(const int pInt[64], int index);
 
 vector<int> getKingMoves(const int pInt[64], int index);
 
-bool isInCheck(const int pInt[64], bool white);
+bool isKingInCheck(const int pInt[64], bool white);
+bool isSpotInCheck(const int pInt[64], int index, bool white);
 
 void showBoard(const int board[]) {
     cout << "\x1B[2J\x1B[H\n\n";
@@ -64,19 +65,20 @@ void showBoard(const int board[]) {
 
 int main() {
 
-//    int emptyBoard[64] = {0, 0, 0, 0, 0, 0, 0, 0,
-//                          0, 0, 0, 0, 0, 0, 0, 0,
-//                          0, 0, 0, 0, 0, 0, 0, 0,
-//                          0, 0, 0, 0, 0, 0, 0, 0,
-//                          0, 0, 0, 0, 0, 0, 0, 0,
-//                          0, 0, 0, 0, 0, 0, 0, 0,
-//                          0, 0, 0, 0, 0, 0, 0, 0,
-//                          0, 0, 0, 0, 0, 0, 0, 0};
-//
-//    vector<int> testMoves = getKnightMoves(emptyBoard, 28);
-//    for (int move : testMoves) {
-//        cout << move << endl;
-//    }
+    int emptyBoard[64] = {0, 0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0, 0,
+                          0, 0, 0, 0, 0, 0, 0, 0};
+
+    vector<int> testMoves = getKingMoves(emptyBoard, 63);
+    for (int move : testMoves) {
+        cout << move << endl;
+    }
+
 
     int enPassant = -1;
 
@@ -89,23 +91,26 @@ int main() {
     const int castlingMoves[4] = {5838, 5878, 5131, 5171};
 
     // initialize the chess board with the pieces
-    int board[64] = {12, 10, 11, 13, 14, 11, 10, 12,
-                     9, 9, 9, 9, 9, 9, 9, 9,
-                     0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0,
-                     1, 1, 1, 1, 1, 1, 1, 1,
-                     4, 2, 3, 5, 6, 3, 2, 4};
+//    int board[64] = {12, 10, 11, 13, 14, 11, 10, 12,
+//                     9, 9, 9, 9, 9, 9, 9, 9,
+//                     0, 0, 0, 0, 0, 0, 0, 0,
+//                     0, 0, 0, 0, 0, 0, 0, 0,
+//                     0, 0, 0, 0, 0, 0, 0, 0,
+//                     0, 0, 0, 0, 0, 0, 0, 0,
+//                     1, 1, 1, 1, 1, 1, 1, 1,
+//                     4, 2, 3, 5, 6, 3, 2, 4};
 
-//    int board[64] = {14, 0, 0, 0, 0, 0, 0, 0,
-//                     0, 0, 0, 0, 0, 0, 0, 0,
-//                     12, 0, 0, 0, 0, 0, 0, 0,
-//                     0, 0, 0, 0, 0, 0, 0, 0,
-//                     0, 0, 0, 0, 0, 0, 0, 0,
-//                     0, 0, 0, 0, 0, 0, 0, 0,
-//                     0, 0, 0, 0, 0, 0, 0, 0,
-//                     5, 0, 0, 0, 0, 0, 0, 6};
+    int board[64] = {14, 0, 12, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     4, 0, 0, 0, 6, 0, 0, 4};
+
+    cout << isSpotInCheck(emptyBoard, 58, false) << endl;
+
 
     bool isWhitesTurn = true;
 
@@ -218,25 +223,25 @@ int main() {
 
             // check for castling
             if (castlingMoves[0] == stoi(input) && (castlingRights >> 5) & 1 &&
-                (castlingRights >> 4) & 1) {
+                (castlingRights >> 4) & 1 && !isSpotInCheck(board, 2, isWhitesTurn) && !isSpotInCheck(board, 3, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
                 isValid = true;
                 board[0] = 0;
                 board[3] = 12;
             }
             if (castlingMoves[1] == stoi(input) && (castlingRights >> 4) & 1 &&
-                (castlingRights >> 3) & 1) {
+                (castlingRights >> 3) & 1 && !isSpotInCheck(board, 5, isWhitesTurn) && !isSpotInCheck(board, 6, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
                 isValid = true;
                 board[7] = 0;
                 board[5] = 12;
             }
             if (castlingMoves[2] == stoi(input) && (castlingRights >> 2) & 1 &&
-                (castlingRights >> 1) & 1) {
+                (castlingRights >> 1) & 1 && !isSpotInCheck(board, 28, isWhitesTurn) && !isSpotInCheck(board, 29, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
                 isValid = true;
                 board[56] = 0;
                 board[59] = 4;
             }
             if (castlingMoves[3] == stoi(input) && (castlingRights >> 1) & 1 &&
-                (castlingRights >> 0) & 1) {
+                (castlingRights >> 0) & 1 && !isSpotInCheck(board, 61, isWhitesTurn) && !isSpotInCheck(board, 62, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
                 isValid = true;
                 board[63] = 0;
                 board[61] = 4;
@@ -251,6 +256,15 @@ int main() {
 
             board[startIndex] = 0;
             board[endIndex] = piece;
+
+            // check if this move puts the king in check
+            if (isKingInCheck(board, isWhitesTurn)) {
+                cout << "Invalid move" << endl;
+                // reset the board
+                copy(begin(oldBoard), end(oldBoard), begin(board));
+                continue;
+            }
+
             // if the piece is a pawn, check if it can be promoted and check if it can be en passant
             // reset the en passant
             enPassant = -1;
@@ -267,13 +281,6 @@ int main() {
                 }
             }
 
-            // check if this move puts the king in check
-            if (isInCheck(board, !isWhitesTurn)) {
-                cout << "Invalid move" << endl;
-                // reset the board
-                copy(begin(oldBoard), end(oldBoard), begin(board));
-                continue;
-            }
 
             if (piece % 8 == 4 || piece % 8 == 6) {
                 switch (startIndex) {
@@ -312,23 +319,12 @@ int main() {
     return 0;
 }
 
-bool isInCheck(const int pInt[64], bool white) {
-    int kingValue = white ? 4 : 12;
-    // find the king
-    int kingIndex = -1;
-    for (int i = 0; i < 64; i++) {
-        if (pInt[i] == kingValue) {
-            kingIndex = i;
-            break;
-        }
-    }
-
-    // check if the king is in check
-    // create a bitboard of all the tiles that can be attacked by the enemy
+bool isSpotInCheck(const int pInt[64], int index, bool white) {
+    // create a list of all the tiles that can be attacked by the enemy
     vector<int> enemyIndexes;
     // find all the indexes of the enemy pieces
     for (int i = 0; i < 64; i++) {
-        if (pInt[i] != 0 && pInt[i] >> 3 != white) {
+        if (pInt[i] != 0 && pInt[i] >> 3 == white) {
             enemyIndexes.push_back(i);
         }
     }
@@ -338,7 +334,7 @@ bool isInCheck(const int pInt[64], bool white) {
         vector<int> moves;
 
         // get the moves for the piece
-        switch (enemy % 8) {
+        switch (pInt[enemy] % 8) {
             case 1:
                 moves = getPawnMoves(pInt, enemy, -1);
                 break;
@@ -358,29 +354,43 @@ bool isInCheck(const int pInt[64], bool white) {
                 moves = getKingMoves(pInt, enemy);
                 break;
             default:
+                cout << "This should never happen" << endl;
                 break;
         }
 
         // remove pawn moves that cannot capture
         if (pInt[enemy] % 8 == 1) {
             for (int i = 0; i < moves.size(); i++) {
-                if (abs(enemy - moves[i])== 8 || abs(enemy - moves[i]) == 16) {
+                if (abs(enemy - moves[i]) == 8 || abs(enemy - moves[i]) == 16) {
                     moves.erase(moves.begin() + i);
                     i--;
                 }
             }
         }
-
-        // check if the king is in any of the moves
-        for (int move : moves) {
-            if (move == kingIndex) {
+        // check if this index is in the list of moves
+        for (int move: moves) {
+            if (move == index) {
                 return true;
             }
         }
     }
-
     return false;
 }
+
+bool isKingInCheck(const int pInt[64], bool white) {
+    int kingValue = white ? 6 : 14;
+    // find the king
+    int kingIndex = -1;
+    for (int i = 0; i < 64; i++) {
+        if (pInt[i] == kingValue) {
+            kingIndex = i;
+            break;
+        }
+    }
+
+    return isSpotInCheck(pInt, kingIndex, white);
+}
+
 
 vector<int> getKingMoves(const int pInt[], int index) {
     vector<int> moves;
@@ -389,7 +399,11 @@ vector<int> getKingMoves(const int pInt[], int index) {
         int newIndex = index + position;
         // if the index is on the board and the new space is empty or an enemy piece
         if (newIndex >= 0 && newIndex < 64 && (pInt[newIndex] == 0 || pInt[newIndex] >> 3 != pInt[index] >> 3)) {
-            moves.push_back(newIndex);
+            // also prevent screen wrapping
+            // make sure the max column difference is 1 or less
+            if (abs(index % 8 - newIndex % 8) <= 1) {
+                moves.push_back(newIndex);
+            }
         }
     }
     return moves;
