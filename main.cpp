@@ -4,6 +4,7 @@ using namespace std;
 
 #include <vector>
 #include <array>
+#include <ctype.h>
 
 vector<int> getPawnMoves(const int pInt[64], int index, int enPassant);
 
@@ -34,22 +35,22 @@ void showBoard(const int board[]) {
     for (int i = 0; i < 64; i++) {
         switch (board[i] % 8) {
             case 1:
-                cout << "P";
+                cout << (char)('P' + ((board[i] >> 3) ? 32 : 0));
                 break;
             case 2:
-                cout << "N";
+                cout << (char)('N' + ((board[i] >> 3) ? 32 : 0));
                 break;
             case 3:
-                cout << "B";
+                cout << (char)('B' + ((board[i] >> 3) ? 32 : 0));
                 break;
             case 4:
-                cout << "R";
+                cout << (char)('R' + ((board[i] >> 3) ? 32 : 0));
                 break;
             case 5:
-                cout << "Q";
+                cout << (char)('Q' + ((board[i] >> 3) ? 32 : 0));
                 break;
             case 6:
-                cout << "K";
+                cout << (char)('K' + ((board[i] >> 3) ? 32 : 0));
                 break;
             default:
                 cout << " ";
@@ -63,22 +64,52 @@ void showBoard(const int board[]) {
     }
 }
 
-int main() {
-
-    int emptyBoard[64] = {0, 0, 0, 0, 0, 0, 0, 0,
-                          0, 0, 0, 0, 0, 0, 0, 0,
-                          0, 0, 0, 0, 0, 0, 0, 0,
-                          0, 0, 0, 0, 0, 0, 0, 0,
-                          0, 0, 0, 0, 0, 0, 0, 0,
-                          0, 0, 0, 0, 0, 0, 0, 0,
-                          0, 0, 0, 0, 0, 0, 0, 0,
-                          0, 0, 0, 0, 0, 0, 0, 0};
-
-    vector<int> testMoves = getKingMoves(emptyBoard, 63);
-    for (int move : testMoves) {
-        cout << move << endl;
+int fenValue(char c) {
+    switch (c) {
+        case 'P':
+            return 1;
+        case 'N':
+            return 2;
+        case 'B':
+            return 3;
+        case 'R':
+            return 4;
+        case 'Q':
+            return 5;
+        case 'K':
+            return 6;
+        default:
+            return 0;
     }
+}
 
+void setupBoard(int board[64], string &fen) {
+    int skip = 0;
+    int index = 0;
+    for (int y = 0; y < 8; y++) {
+        for (int x = 0; x < 8; x++) {
+            if (skip != 0) {
+                skip--;
+                board[y*8 + x] = 0;
+                continue;
+            }
+            if (fen[index] == '/') {
+                skip = 0;
+                index++;
+            }
+            if (isdigit(fen[index])) {
+                skip = fen[index] - '1';
+                index++;
+            } else {
+                board[y*8+x] = (fenValue(toupper(fen[index])) + (isupper(fen[index]) ? 0 : 8));;
+                index++;
+            }
+        }
+        index++;
+    }
+}
+
+int main() {
 
     int enPassant = -1;
 
@@ -90,26 +121,9 @@ int main() {
     // input values for the move of castling
     const int castlingMoves[4] = {5838, 5878, 5131, 5171};
 
-    // initialize the chess board with the pieces
-//    int board[64] = {12, 10, 11, 13, 14, 11, 10, 12,
-//                     9, 9, 9, 9, 9, 9, 9, 9,
-//                     0, 0, 0, 0, 0, 0, 0, 0,
-//                     0, 0, 0, 0, 0, 0, 0, 0,
-//                     0, 0, 0, 0, 0, 0, 0, 0,
-//                     0, 0, 0, 0, 0, 0, 0, 0,
-//                     1, 1, 1, 1, 1, 1, 1, 1,
-//                     4, 2, 3, 5, 6, 3, 2, 4};
-
-    int board[64] = {14, 0, 12, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0,
-                     4, 0, 0, 0, 6, 0, 0, 4};
-
-    cout << isSpotInCheck(emptyBoard, 58, false) << endl;
+    int board[64];
+    string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    setupBoard(board, fen);
 
 
     bool isWhitesTurn = true;
@@ -235,7 +249,7 @@ int main() {
                 board[5] = 12;
             }
             if (castlingMoves[2] == stoi(input) && (castlingRights >> 2) & 1 &&
-                (castlingRights >> 1) & 1 && !isSpotInCheck(board, 28, isWhitesTurn) && !isSpotInCheck(board, 29, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
+                (castlingRights >> 1) & 1 && !isSpotInCheck(board, 58, isWhitesTurn) && !isSpotInCheck(board, 59, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
                 isValid = true;
                 board[56] = 0;
                 board[59] = 4;
@@ -391,7 +405,6 @@ bool isKingInCheck(const int pInt[64], bool white) {
     return isSpotInCheck(pInt, kingIndex, white);
 }
 
-
 vector<int> getKingMoves(const int pInt[], int index) {
     vector<int> moves;
     int positions[8] = {-9, -8, -7, -1, 1, 7, 8, 9};
@@ -432,7 +445,7 @@ vector<int> getRookMoves(const int pInt[], int index) {
             if (newIndex >= 0 && newIndex < 64 && (pInt[newIndex] == 0 || pInt[newIndex] >> 3 != pInt[index] >> 3)) {
                 moves.push_back(newIndex);
                 // if the new space is an enemy piece, stop
-                if (pInt[newIndex] >> 3 != pInt[index] >> 3) {
+                if (pInt[newIndex] != 0 && pInt[newIndex] >> 3 != pInt[index] >> 3) {
                     break;
                 }
             } else {
