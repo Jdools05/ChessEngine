@@ -5,6 +5,7 @@ using namespace std;
 #include <vector>
 #include <array>
 #include <ctype.h>
+#include <bits/stdc++.h>
 
 vector<int> getPawnMoves(const int pInt[64], int index, int enPassant);
 
@@ -83,7 +84,7 @@ int fenValue(char c) {
     }
 }
 
-void setupBoard(int board[64], string &fen) {
+void setupBoard(int board[64], string &fen, int &enPassant, int &whiteToMove, int &castling) {
     int skip = 0;
     int index = 0;
     for (int y = 0; y < 8; y++) {
@@ -107,6 +108,32 @@ void setupBoard(int board[64], string &fen) {
         }
         index++;
     }
+
+    istringstream ss(fen);
+    string token;
+    int i = 0;
+    while (ss >> token) {
+        if (i == 1) {
+            whiteToMove = (token == "w");
+        } else if (i == 2) {
+            enPassant = (token == "-" ? -1 : (token[1] - 'a') + (token[0] - '1') * 8);
+        } else if (i == 3) {
+            castling = 0;
+            if (token.find('K') != string::npos) {
+                castling |= 1;
+            }
+            if (token.find('Q') != string::npos) {
+                castling |= 2;
+            }
+            if (token.find('k') != string::npos) {
+                castling |= 4;
+            }
+            if (token.find('q') != string::npos) {
+                castling |= 8;
+            }
+        }
+        i++;
+    }
 }
 
 int main() {
@@ -120,13 +147,13 @@ int main() {
 
     // input values for the move of castling
     const int castlingMoves[4] = {5838, 5878, 5131, 5171};
+    bool isWhitesTurn = true;
 
     int board[64];
     string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    setupBoard(board, fen);
+    setupBoard(board, fen, enPassant, reinterpret_cast<int &>(isWhitesTurn), castlingRights);
 
 
-    bool isWhitesTurn = true;
 
     showBoard(board);
 
