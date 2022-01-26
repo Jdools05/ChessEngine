@@ -19,6 +19,33 @@ vector<int> getQueenMoves(const int pInt[64], int index);
 
 vector<int> getKingMoves(const int pInt[64], int index);
 
+vector<int> getMovesFromPieceValue(const int pInt[64], int index, int enPassant) {
+    vector<int> moves;
+    switch (pInt[index]) {
+        case 1:
+            moves = getPawnMoves(pInt, index, enPassant);
+            break;
+        case 2:
+            moves = getKnightMoves(pInt, index);
+            break;
+        case 3:
+            moves = getBishopMoves(pInt, index);
+            break;
+        case 4:
+            moves = getRookMoves(pInt, index);
+            break;
+        case 5:
+            moves = getQueenMoves(pInt, index);
+            break;
+        case 6:
+            moves = getKingMoves(pInt, index);
+            break;
+        default:
+            break;
+    }
+    return moves;
+}
+
 bool isKingInCheck(const int pInt[64], bool white);
 bool isSpotInCheck(const int pInt[64], int index, bool white);
 
@@ -145,30 +172,7 @@ bool isKingInCheckmate(const int board[64], bool white, int enPassant) {
     bitset<64> tilesUnderAttack = 0;
     for (int i = 0; i < 64; i++) {
         if (board[i] % 8 != 0 && (board[i] >> 3) == white) {
-            vector<int> moves;
-            switch(board[i] % 8) {
-                case 6:
-                    moves = getKingMoves(board, i);
-                    break;
-                case 3:
-                    moves = getBishopMoves(board, i);
-                    break;
-                case 2:
-                    moves = getKnightMoves(board, i);
-                    break;
-                case 1:
-                    moves = getPawnMoves(board, i, enPassant);
-                    break;
-                case 4:
-                    moves = getRookMoves(board, i);
-                    break;
-                case 5:
-                    moves = getQueenMoves(board, i);
-                    break;
-                default:
-                    break;
-            }
-            for (int move : moves) {
+            for (int move : getMovesFromPieceValue(board, i, enPassant)) {
                 tilesUnderAttack[move] = true;
             }
         }
@@ -182,30 +186,7 @@ bool isKingInCheckmate(const int board[64], bool white, int enPassant) {
     // get all the moves that don't put the king in check
     for (int i = 0; i < 64; i++) {
         if (board[i] % 8 != 0 && (board[i] >> 3) != white) {
-            vector<int> moves;
-            switch(board[i] % 8) {
-                case 6:
-                    moves = getKingMoves(board, i);
-                    break;
-                case 3:
-                    moves = getBishopMoves(board, i);
-                    break;
-                case 2:
-                    moves = getKnightMoves(board, i);
-                    break;
-                case 1:
-                    moves = getPawnMoves(board, i, enPassant);
-                    break;
-                case 4:
-                    moves = getRookMoves(board, i);
-                    break;
-                case 5:
-                    moves = getQueenMoves(board, i);
-                    break;
-                default:
-                    break;
-            }
-            for (int move : moves) {
+            for (int move : getMovesFromPieceValue(board, i, enPassant)) {
                  newBoard[move] = board[i];
                  newBoard[i] = 0;
                  if (!isKingInCheck(newBoard, white)) {
@@ -220,6 +201,9 @@ bool isKingInCheckmate(const int board[64], bool white, int enPassant) {
 
 int main() {
 
+    // stores the tile for en passant capture
+    // this is -1 if there is no en passant capture
+    // resets at the end of each turn unless there is a new en passant capture
     int enPassant = -1;
 
     // this int represents the rights to castle for each piece in the following order:
@@ -238,6 +222,7 @@ int main() {
 
     showBoard(board);
 
+    // main game loop
     while (true) {
         // get the input from the user
         string input;
@@ -308,31 +293,7 @@ int main() {
             }
 
             // get the total possible moves for the piece
-            vector<int> moves;
-
-            // get the moves for the piece
-            switch (piece % 8) {
-                case 1:
-                    moves = getPawnMoves(board, startIndex, enPassant);
-                    break;
-                case 2:
-                    moves = getKnightMoves(board, startIndex);
-                    break;
-                case 3:
-                    moves = getBishopMoves(board, startIndex);
-                    break;
-                case 4:
-                    moves = getRookMoves(board, startIndex);
-                    break;
-                case 5:
-                    moves = getQueenMoves(board, startIndex);
-                    break;
-                case 6:
-                    moves = getKingMoves(board, startIndex);
-                    break;
-                default:
-                    break;
-            }
+            vector<int> moves = getMovesFromPieceValue(board, startIndex, enPassant);
 
             // check if the move is within the possible moves
             bool isValid = false;
@@ -444,7 +405,6 @@ int main() {
         showBoard(board);
     }
 
-
     return 0;
 }
 
@@ -460,32 +420,7 @@ bool isSpotInCheck(const int pInt[64], int index, bool white) {
     // for each enemy piece, check if it can attack the king
     for (int enemy : enemyIndexes) {
         // get the total possible moves for the piece
-        vector<int> moves;
-
-        // get the moves for the piece
-        switch (pInt[enemy] % 8) {
-            case 1:
-                moves = getPawnMoves(pInt, enemy, -1);
-                break;
-            case 2:
-                moves = getKnightMoves(pInt, enemy);
-                break;
-            case 3:
-                moves = getBishopMoves(pInt, enemy);
-                break;
-            case 4:
-                moves = getRookMoves(pInt, enemy);
-                break;
-            case 5:
-                moves = getQueenMoves(pInt, enemy);
-                break;
-            case 6:
-                moves = getKingMoves(pInt, enemy);
-                break;
-            default:
-                cout << "This should never happen" << endl;
-                break;
-        }
+        vector<int> moves = getMovesFromPieceValue(pInt, enemy, -1);
 
         // remove pawn moves that cannot capture
         if (pInt[enemy] % 8 == 1) {
