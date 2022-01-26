@@ -99,10 +99,11 @@ void setupBoard(int board[64], string &fen, int &enPassant, int &whiteToMove, in
                 index++;
             }
             if (isdigit(fen[index])) {
+                board[y*8+x] = 0;
                 skip = fen[index] - '1';
                 index++;
             } else {
-                board[y*8+x] = (fenValue(toupper(fen[index])) + (isupper(fen[index]) ? 0 : 8));;
+                board[y*8+x] = (fenValue((char) toupper(fen[index])) + (isupper(fen[index]) ? 0 : 8));;
                 index++;
             }
         }
@@ -136,6 +137,87 @@ void setupBoard(int board[64], string &fen, int &enPassant, int &whiteToMove, in
     }
 }
 
+bool isKingInCheckmate(const int board[64], bool white, int enPassant) {
+    if (!isKingInCheck(board, white)) {
+        return false;
+    }
+
+    bitset<64> tilesUnderAttack = 0;
+    for (int i = 0; i < 64; i++) {
+        if (board[i] % 8 != 0 && (board[i] >> 3) == white) {
+            vector<int> moves;
+            switch(board[i] % 8) {
+                case 6:
+                    moves = getKingMoves(board, i);
+                    break;
+                case 3:
+                    moves = getBishopMoves(board, i);
+                    break;
+                case 2:
+                    moves = getKnightMoves(board, i);
+                    break;
+                case 1:
+                    moves = getPawnMoves(board, i, enPassant);
+                    break;
+                case 4:
+                    moves = getRookMoves(board, i);
+                    break;
+                case 5:
+                    moves = getQueenMoves(board, i);
+                    break;
+                default:
+                    break;
+            }
+            for (int move : moves) {
+                tilesUnderAttack[move] = true;
+            }
+        }
+    }
+
+    int newBoard[64];
+    for (int i = 0; i < 64; i++) {
+        newBoard[i] = board[i];
+    }
+
+    // get all the moves that don't put the king in check
+    for (int i = 0; i < 64; i++) {
+        if (board[i] % 8 != 0 && (board[i] >> 3) != white) {
+            vector<int> moves;
+            switch(board[i] % 8) {
+                case 6:
+                    moves = getKingMoves(board, i);
+                    break;
+                case 3:
+                    moves = getBishopMoves(board, i);
+                    break;
+                case 2:
+                    moves = getKnightMoves(board, i);
+                    break;
+                case 1:
+                    moves = getPawnMoves(board, i, enPassant);
+                    break;
+                case 4:
+                    moves = getRookMoves(board, i);
+                    break;
+                case 5:
+                    moves = getQueenMoves(board, i);
+                    break;
+                default:
+                    break;
+            }
+            for (int move : moves) {
+                 newBoard[move] = board[i];
+                 newBoard[i] = 0;
+                 if (!isKingInCheck(newBoard, white)) {
+                     return false;
+                 }
+            }
+        }
+    }
+
+    return true;
+}
+
 int main() {
 
     int enPassant = -1;
@@ -150,10 +232,9 @@ int main() {
     bool isWhitesTurn = true;
 
     int board[64];
-    string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+//    string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    string fen = "1k6/8/Q7/8/8/8/8/2R3K1 w - - 0 1";
     setupBoard(board, fen, enPassant, reinterpret_cast<int &>(isWhitesTurn), castlingRights);
-
-
 
     showBoard(board);
 
@@ -304,6 +385,13 @@ int main() {
                 // reset the board
                 copy(begin(oldBoard), end(oldBoard), begin(board));
                 continue;
+            }
+
+            // check if this move puts the king in checkmate
+            if (isKingInCheckmate(board, !isWhitesTurn, enPassant)) {
+                cout << "Checkmate " << (isWhitesTurn ? "White" : "Black") << " Wins!" << endl;
+                // end the game loop
+                break;
             }
 
             // if the piece is a pawn, check if it can be promoted and check if it can be en passant
