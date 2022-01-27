@@ -4,7 +4,7 @@ using namespace std;
 
 #include <vector>
 #include <array>
-#include <ctype.h>
+#include <cctype>
 #include <bits/stdc++.h>
 
 vector<int> getPawnMoves(const int pInt[64], int index, int enPassant);
@@ -47,6 +47,7 @@ vector<int> getMovesFromPieceValue(const int pInt[64], int index, int enPassant)
 }
 
 bool isKingInCheck(const int pInt[64], bool white);
+
 bool isSpotInCheck(const int pInt[64], int index, bool white);
 
 void showBoard(const int board[]) {
@@ -216,8 +217,8 @@ int main() {
     bool isWhitesTurn = true;
 
     int board[64];
-//    string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    string fen = "1k6/8/Q7/8/8/8/8/2R3K1 w - - 0 1";
+    string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+//    string fen = "1k6/8/Q7/8/8/8/8/2R3K1 w - - 0 1";
     setupBoard(board, fen, enPassant, reinterpret_cast<int &>(isWhitesTurn), castlingRights);
 
     showBoard(board);
@@ -305,33 +306,39 @@ int main() {
             }
 
             // check for castling
-            if (castlingMoves[0] == stoi(input) && (castlingRights >> 5) & 1 &&
-                (castlingRights >> 4) & 1 && !isSpotInCheck(board, 2, isWhitesTurn) && !isSpotInCheck(board, 3, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
-                isValid = true;
-                board[0] = 0;
-                board[3] = 12;
-            }
-            if (castlingMoves[1] == stoi(input) && (castlingRights >> 4) & 1 &&
-                (castlingRights >> 3) & 1 && !isSpotInCheck(board, 5, isWhitesTurn) && !isSpotInCheck(board, 6, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
-                isValid = true;
-                board[7] = 0;
-                board[5] = 12;
-            }
-            if (castlingMoves[2] == stoi(input) && (castlingRights >> 2) & 1 &&
-                (castlingRights >> 1) & 1 && !isSpotInCheck(board, 58, isWhitesTurn) && !isSpotInCheck(board, 59, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
-                isValid = true;
-                board[56] = 0;
-                board[59] = 4;
-            }
-            if (castlingMoves[3] == stoi(input) && (castlingRights >> 1) & 1 &&
-                (castlingRights >> 0) & 1 && !isSpotInCheck(board, 61, isWhitesTurn) && !isSpotInCheck(board, 62, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
-                isValid = true;
-                board[63] = 0;
-                board[61] = 4;
-            }
+            if (board[startIndex] % 8 == 6){
+                if (castlingMoves[0] == stoi(input) && (castlingRights >> 5) & 1 &&
+                    (castlingRights >> 4) & 1 && !isSpotInCheck(board, 2, isWhitesTurn) &&
+                    !isSpotInCheck(board, 3, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
+                    isValid = true;
+                    board[0] = 0;
+                    board[3] = 12;
+                }
+                if (castlingMoves[1] == stoi(input) && (castlingRights >> 4) & 1 &&
+                    (castlingRights >> 3) & 1 && !isSpotInCheck(board, 5, isWhitesTurn) &&
+                    !isSpotInCheck(board, 6, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
+                    isValid = true;
+                    board[7] = 0;
+                    board[5] = 12;
+                }
+                if (castlingMoves[2] == stoi(input) && (castlingRights >> 2) & 1 &&
+                    (castlingRights >> 1) & 1 && !isSpotInCheck(board, 58, isWhitesTurn) &&
+                    !isSpotInCheck(board, 59, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
+                    isValid = true;
+                    board[56] = 0;
+                    board[59] = 4;
+                }
+                if (castlingMoves[3] == stoi(input) && (castlingRights >> 1) & 1 &&
+                    (castlingRights >> 0) & 1 && !isSpotInCheck(board, 61, isWhitesTurn) &&
+                    !isSpotInCheck(board, 62, isWhitesTurn) && !isKingInCheck(board, isWhitesTurn)) {
+                    isValid = true;
+                    board[63] = 0;
+                    board[61] = 4;
+                }
+            } else {isValid = true;}
 
             if (!isValid) {
-                cout << "Invalid move" << endl;
+                cout << "Invalid castling" << endl;
                 continue;
             }
 
@@ -342,7 +349,7 @@ int main() {
 
             // check if this move puts the king in check
             if (isKingInCheck(board, isWhitesTurn)) {
-                cout << "Invalid move" << endl;
+                cout << "Invalid move (king in check)" << endl;
                 // reset the board
                 copy(begin(oldBoard), end(oldBoard), begin(board));
                 continue;
@@ -351,6 +358,7 @@ int main() {
             // check if this move puts the king in checkmate
             if (isKingInCheckmate(board, !isWhitesTurn, enPassant)) {
                 cout << "Checkmate " << (isWhitesTurn ? "White" : "Black") << " Wins!" << endl;
+                showBoard(board);
                 // end the game loop
                 break;
             }
