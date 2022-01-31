@@ -4,7 +4,7 @@ using namespace std;
 
 #include <vector>
 #include <array>
-#include <ctype.h>
+#include <cctype>
 #include <bits/stdc++.h>
 
 vector<int> getKingMoves(const int pInt[], int index) {
